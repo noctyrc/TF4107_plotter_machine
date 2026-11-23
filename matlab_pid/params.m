@@ -29,17 +29,29 @@ p.Beq     = p.bm + (p.bl * p.rp^2) / p.eta;
 p.u_min   = -24.0;      % V (batas bawah tegangan/sinyal kontrol)
 p.u_max   = 24.0;       % V (batas atas tegangan/sinyal kontrol)
 p.dt      = 0.001;      % s (1 ms)
-p.t_end   = 2.0;        % s
+p.t_end   = 1.0;        % s
 
-% Parameter PID kecepatan (speed control)
-p.pid_speed.Kp = 15.0;
-p.pid_speed.Ki = 120.0;
-p.pid_speed.Kd = 0.05;
-p.pid_speed.N  = 100.0;     % koefisien filter derivatif (rad/s)
+% pid speed x
+p.pid_speed.x.Kp = 25.0;
+p.pid_speed.x.Ki = 280.0;
+p.pid_speed.x.Kd = 0.08;
+p.pid_speed.x.N  = 100.0;     % koefisien filter derivatif (rad/s)
 
-% Parameter PID posisi (position control)
-p.pid_pos.Kp   = 450.0;
-p.pid_pos.Ki   = 35.0;
-p.pid_pos.Kd   = 28.0;
-p.pid_pos.N    = 150.0;     % koefisien filter derivatif (rad/s)
+% pid speed y
+p.pid_speed.y.Kp = 25.0;
+p.pid_speed.y.Ki = 280.0;
+p.pid_speed.y.Kd = 0.08;
+p.pid_speed.y.N  = 100.0;     % koefisien filter derivatif (rad/s)
+
+% pid position x
+p.pid_pos.x.Kp   = 450.0;
+p.pid_pos.x.Ki   = 35.0;
+p.pid_pos.x.Kd   = 28.0;
+p.pid_pos.x.N    = 150.0;     % koefisien filter derivatif (rad/s)
+
+% pid position y
+p.pid_pos.y.Kp   = 450.0;
+p.pid_pos.y.Ki   = 35.0;
+p.pid_pos.y.Kd   = 28.0;
+p.pid_pos.y.N    = 150.0;     % koefisien filter derivatif (rad/s)
 end
