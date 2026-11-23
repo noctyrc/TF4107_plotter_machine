@@ -4,12 +4,12 @@ p = params();
 t = 0:p.dt:p.t_end;
 N = numel(t);
 
-% --- Target awal posisi 2D [mm] & waktu step [s] ---
+% yarget awal posisi 2D [mm] & waktu step [s]
 init_x_mm = 50.0;
 init_y_mm = 35.0;
 t_step    = 0.050;
 
-% Siapkan parameter khusus sumbu X & sumbu Y
+% parameter sumbu X & sumbu Y
 p_x = p;
 p_x.m   = p.m_x;
 p_x.Jeq = p.Jm + p.Jp + (p_x.m * p.rp^2) / p.eta;
@@ -20,10 +20,9 @@ p_y.m   = p.m_y;
 p_y.Jeq = p.Jm + p.Jp + (p_y.m * p.rp^2) / p.eta;
 p_y.Beq = p.bm + (p.bl * p.rp^2) / p.eta;
 
-% --- Buat Figure & Komponen Plot ---
 fig = figure('Name', '2D Point Position Control Simulation', 'Position', [80, 80, 1220, 700]);
 
-% 1. Lintasan bidang X-Y (kiri)
+% lintasan bidang X Y
 ax1 = subplot(2, 2, [1, 3]);
 ax1.Position = [0.06, 0.12, 0.30, 0.78];
 grid(ax1, 'on');
@@ -32,7 +31,7 @@ xlabel(ax1, 'Posisi X (mm)');
 ylabel(ax1, 'Posisi Y (mm)');
 title(ax1, 'Lintasan Planar 2D (POINT)');
 
-% 2. Respon waktu posisi X dan Y (tengah atas)
+% respon waktu posisi X Y
 ax2 = subplot(2, 2, 2);
 ax2.Position = [0.42, 0.56, 0.27, 0.34];
 grid(ax2, 'on');
@@ -40,7 +39,7 @@ xlabel(ax2, 'Waktu (s)');
 ylabel(ax2, 'Posisi (mm)');
 title(ax2, 'Respon Posisi X & Y (RK4)');
 
-% 3. Kecepatan linier sumbu X dan Y (tengah bawah)
+% kecepatan linier sumbu X Y
 ax3 = subplot(2, 2, 4);
 ax3.Position = [0.42, 0.12, 0.27, 0.34];
 grid(ax3, 'on');
@@ -48,7 +47,7 @@ xlabel(ax3, 'Waktu (s)');
 ylabel(ax3, 'Kecepatan (mm/s)');
 title(ax3, 'Kecepatan Linier X & Y (RK4)');
 
-% --- Panel Input & Informasi di Sisi Kanan Figure ---
+% panel input & informasi
 panel = uipanel(fig, ...
     'Title', 'Target & Parameter PID', ...
     'FontWeight', 'bold', ...
@@ -70,12 +69,12 @@ edit_y = uicontrol(panel, 'Style', 'edit', ...
     'Units', 'normalized', 'Position', [0.52, 0.80, 0.42, 0.055], ...
     'String', num2str(init_y_mm));
 
-% Tombol jalankan ulang simulasi
+% button run
 btn_run = uicontrol(panel, 'Style', 'pushbutton', ...
     'Units', 'normalized', 'Position', [0.06, 0.72, 0.88, 0.06], ...
     'String', 'Run Simulasi', 'FontWeight', 'bold');
 
-% Kotak teks ringkasan error & gain PID di bawah tombol
+% teks ringkasan error & gain PID di bawah tombol
 info_box = uicontrol(panel, 'Style', 'text', ...
     'Units', 'normalized', 'Position', [0.06, 0.03, 0.88, 0.66], ...
     'HorizontalAlignment', 'left', ...
@@ -83,7 +82,6 @@ info_box = uicontrol(panel, 'Style', 'text', ...
     'FontSize', 8.5, ...
     'String', '');
 
-% Hubungkan callback ke tombol dan Enter pada kolom input
 sim_data = struct('p', p, 'p_x', p_x, 'p_y', p_y, 't', t, 'N', N, ...
     't_step', t_step, 'ax1', ax1, 'ax2', ax2, 'ax3', ax3, ...
     'edit_x', edit_x, 'edit_y', edit_y, 'info_box', info_box, ...
@@ -93,10 +91,9 @@ btn_run.Callback = @(~, ~) update_simulation(sim_data);
 edit_x.Callback  = @(~, ~) update_simulation(sim_data);
 edit_y.Callback  = @(~, ~) update_simulation(sim_data);
 
-% Jalankan pertama kali saat skrip dibuka
 update_simulation(sim_data);
 
-% --- Fungsi Callback & Simulasi ---
+% fungsi callback & simulasi ---
 function update_simulation(d)
     val_x_mm = str2double(strtrim(d.edit_x.String));
     val_y_mm = str2double(strtrim(d.edit_y.String));
@@ -131,7 +128,6 @@ function update_simulation(d)
     fprintf('Posisi akhir RK4 : (%.2f mm, %.2f mm)\n', x_rk4(end)*1000, y_rk4(end)*1000);
     fprintf('Error akhir RK4  : (%.3f mm, %.3f mm)\n', err_x_mm, err_y_mm);
 
-    % Update Plot 1: Lintasan X-Y
     cla(d.ax1);
     plot(d.ax1, x_ref_vec * 1000, y_ref_vec * 1000, '--k', 'LineWidth', 1.4); hold(d.ax1, 'on');
     plot(d.ax1, x_rk4 * 1000, y_rk4 * 1000, 'LineWidth', 1.8);
@@ -144,7 +140,6 @@ function update_simulation(d)
     title(d.ax1, 'Lintasan Planar 2D (POINT)');
     legend(d.ax1, 'Referensi', 'RK4', 'Forward Euler', 'Target', 'Location', 'best');
 
-    % Update Plot 2: Respon Posisi X & Y
     cla(d.ax2);
     plot(d.ax2, d.t, x_ref_vec * 1000, '--', 'LineWidth', 1.2); hold(d.ax2, 'on');
     plot(d.ax2, d.t, x_rk4 * 1000, 'LineWidth', 1.6);
@@ -156,7 +151,6 @@ function update_simulation(d)
     title(d.ax2, 'Respon Posisi X & Y (RK4)');
     legend(d.ax2, 'X ref', 'X RK4', 'Y ref', 'Y RK4', 'Location', 'best');
 
-    % Update Plot 3: Kecepatan Linier X & Y
     cla(d.ax3);
     plot(d.ax3, d.t, vx_rk4 * 1000, 'LineWidth', 1.4); hold(d.ax3, 'on');
     plot(d.ax3, d.t, vy_rk4 * 1000, 'LineWidth', 1.4);
@@ -166,7 +160,7 @@ function update_simulation(d)
     title(d.ax3, 'Kecepatan Linier X & Y (RK4)');
     legend(d.ax3, 'v_x', 'v_y', 'Location', 'best');
 
-    % Update teks ringkasan di panel kanan
+    % update teks info
     info_lines = {
         sprintf('t_step  : %.3f s', d.t_step)
         sprintf('Err RK4 : (%.2f, %.2f) mm', err_x_mm, err_y_mm)
