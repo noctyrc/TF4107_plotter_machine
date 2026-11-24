@@ -8,21 +8,24 @@ A_aug = [A,            zeros(3, 1);
     -pa.rp, 0, 0,  0];
 B_aug = [B; 0];
 
-% diskretisasi orde-1
 dt = pa.dt;
 n  = size(A_aug, 1);
-Ad = eye(n) + A_aug * dt;
-Bd = B_aug * dt;
-Qd = Q * dt;
+
+% Diskretisasi ZOH via eksponensial matriks
+M  = expm([A_aug, B_aug; zeros(1, n + 1)] * dt);
+Ad = M(1:n, 1:n);
+Bd = M(1:n, n+1);
+
+Qd = Q;
 Rd = R;
 
-% iterasi discrete algebraic riccati equation (DARE)
+% Iterasi Discrete Algebraic Riccati Equation (DARE)
 P = Qd;
 max_iter = 5000;
 tol = 1e-10;
 
 for iter = 1:max_iter
-    BtPB = Bd' * P * Bd + Rd;
+    BtPB   = Bd' * P * Bd + Rd;
     P_next = Ad' * P * Ad - (Ad' * P * Bd) / BtPB * (Bd' * P * Ad) + Qd;
     P_next = 0.5 * (P_next + P_next');
 
