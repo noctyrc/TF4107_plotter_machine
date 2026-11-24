@@ -8,14 +8,15 @@ err_vel = vel_ref - vel_curr;
 
 q_cand = q_in + err_pos * dt;
 
-k_pos = K_aug(1) / rp;
-k_vel = K_aug(2) / rp;
-k_cur = K_aug(3);
-k_int = -K_aug(4);
+k_pos = abs(K_aug(1)) / rp;
+k_vel = abs(K_aug(2)) / rp;
+k_cur = abs(K_aug(3));
+k_int = abs(K_aug(4));
 
 u_raw = k_pos * err_pos + k_vel * err_vel - k_cur * i_curr + k_int * q_cand;
 u = max(u_min, min(u_max, u_raw));
 
+% Anti-windup clamping
 if (u == u_raw) || ...
         (u == u_max && err_pos < 0) || ...
         (u == u_min && err_pos > 0)
