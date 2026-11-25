@@ -4,10 +4,14 @@ p = params();
 t = 0:p.dt:p.t_end;
 N = numel(t);
 
-% yarget awal posisi 2D [mm] & waktu step [s]
+% target awal posisi 2D [mm] & waktu step [s]
 init_x_mm = 50.0;
 init_y_mm = 35.0;
 t_step    = 0.050;
+
+% nilai awal PID diambil dari params()
+def_pid_x = p.pid_pos.x;
+def_pid_y = p.pid_pos.y;
 
 % parameter sumbu X & sumbu Y
 p_x = p;
@@ -20,7 +24,7 @@ p_y.m   = p.m_y;
 p_y.Jeq = p.Jm + p.Jp + (p_y.m * p.rp^2) / p.eta;
 p_y.Beq = p.bm + (p.bl * p.rp^2) / p.eta;
 
-fig = figure('Name', '2D Point Position Control Simulation', 'Position', [80, 80, 1220, 700]);
+fig = figure('Name', '2D Point Position Control Simulation', 'Position', [80, 80, 1240, 720]);
 
 % lintasan bidang X Y
 ax1 = subplot(2, 2, [1, 3]);
@@ -33,7 +37,7 @@ title(ax1, 'Lintasan Planar 2D (POINT)');
 
 % respon waktu posisi X Y
 ax2 = subplot(2, 2, 2);
-ax2.Position = [0.42, 0.56, 0.27, 0.34];
+ax2.Position = [0.41, 0.56, 0.27, 0.34];
 grid(ax2, 'on');
 xlabel(ax2, 'Waktu (s)');
 ylabel(ax2, 'Posisi (mm)');
@@ -41,7 +45,7 @@ title(ax2, 'Respon Posisi X & Y (RK4)');
 
 % kecepatan linier sumbu X Y
 ax3 = subplot(2, 2, 4);
-ax3.Position = [0.42, 0.12, 0.27, 0.34];
+ax3.Position = [0.41, 0.12, 0.27, 0.34];
 grid(ax3, 'on');
 xlabel(ax3, 'Waktu (s)');
 ylabel(ax3, 'Kecepatan (mm/s)');
@@ -51,32 +55,60 @@ title(ax3, 'Kecepatan Linier X & Y (RK4)');
 panel = uipanel(fig, ...
     'Title', 'Target & Parameter PID', ...
     'FontWeight', 'bold', ...
-    'Position', [0.72, 0.12, 0.26, 0.78]);
+    'Position', [0.71, 0.08, 0.27, 0.84]);
 
-% Input X_ref [mm]
+% Input X_ref & Y_ref [mm]
 uicontrol(panel, 'Style', 'text', ...
-    'Units', 'normalized', 'Position', [0.06, 0.87, 0.44, 0.05], ...
+    'Units', 'normalized', 'Position', [0.05, 0.90, 0.42, 0.045], ...
     'String', 'X_ref (mm):', 'HorizontalAlignment', 'left');
 edit_x = uicontrol(panel, 'Style', 'edit', ...
-    'Units', 'normalized', 'Position', [0.52, 0.87, 0.42, 0.055], ...
+    'Units', 'normalized', 'Position', [0.50, 0.90, 0.45, 0.05], ...
     'String', num2str(init_x_mm));
 
-% Input Y_ref [mm]
 uicontrol(panel, 'Style', 'text', ...
-    'Units', 'normalized', 'Position', [0.06, 0.80, 0.44, 0.05], ...
+    'Units', 'normalized', 'Position', [0.05, 0.84, 0.42, 0.045], ...
     'String', 'Y_ref (mm):', 'HorizontalAlignment', 'left');
 edit_y = uicontrol(panel, 'Style', 'edit', ...
-    'Units', 'normalized', 'Position', [0.52, 0.80, 0.42, 0.055], ...
+    'Units', 'normalized', 'Position', [0.50, 0.84, 0.45, 0.05], ...
     'String', num2str(init_y_mm));
+
+% Header kolom PID Sumbu X & Sumbu Y
+uicontrol(panel, 'Style', 'text', ...
+    'Units', 'normalized', 'Position', [0.05, 0.78, 0.36, 0.04], ...
+    'String', 'Gain PID', 'FontWeight', 'bold', 'HorizontalAlignment', 'left');
+uicontrol(panel, 'Style', 'text', ...
+    'Units', 'normalized', 'Position', [0.44, 0.78, 0.24, 0.04], ...
+    'String', 'Sumbu X', 'FontWeight', 'bold', 'HorizontalAlignment', 'center');
+uicontrol(panel, 'Style', 'text', ...
+    'Units', 'normalized', 'Position', [0.71, 0.78, 0.24, 0.04], ...
+    'String', 'Sumbu Y', 'FontWeight', 'bold', 'HorizontalAlignment', 'center');
+
+% Helper membuat baris edit PID X dan Y
+make_pid_row = @(label_str, y_pos, val_x, val_y) deal( ...
+    uicontrol(panel, 'Style', 'text', ...
+        'Units', 'normalized', 'Position', [0.05, y_pos, 0.36, 0.045], ...
+        'String', label_str, 'HorizontalAlignment', 'left'), ...
+    uicontrol(panel, 'Style', 'edit', ...
+        'Units', 'normalized', 'Position', [0.44, y_pos, 0.24, 0.048], ...
+        'String', num2str(val_x)), ...
+    uicontrol(panel, 'Style', 'edit', ...
+        'Units', 'normalized', 'Position', [0.71, y_pos, 0.24, 0.048], ...
+        'String', num2str(val_y)) ...
+);
+
+[~, edit_kpx, edit_kpy] = make_pid_row('Kp:', 0.725, def_pid_x.Kp, def_pid_y.Kp);
+[~, edit_kix, edit_kiy] = make_pid_row('Ki:', 0.670, def_pid_x.Ki, def_pid_y.Ki);
+[~, edit_kdx, edit_kdy] = make_pid_row('Kd:', 0.615, def_pid_x.Kd, def_pid_y.Kd);
+[~, edit_nx,  edit_ny]  = make_pid_row('N :', 0.560, def_pid_x.N,  def_pid_y.N);
 
 % button run
 btn_run = uicontrol(panel, 'Style', 'pushbutton', ...
-    'Units', 'normalized', 'Position', [0.06, 0.72, 0.88, 0.06], ...
+    'Units', 'normalized', 'Position', [0.05, 0.485, 0.90, 0.058], ...
     'String', 'Run Simulasi', 'FontWeight', 'bold');
 
-% teks ringkasan error & gain PID di bawah tombol
+% teks ringkasan error & parameter di bawah tombol
 info_box = uicontrol(panel, 'Style', 'text', ...
-    'Units', 'normalized', 'Position', [0.06, 0.03, 0.88, 0.66], ...
+    'Units', 'normalized', 'Position', [0.05, 0.02, 0.90, 0.44], ...
     'HorizontalAlignment', 'left', ...
     'FontName', 'FixedWidth', ...
     'FontSize', 8.5, ...
@@ -84,28 +116,37 @@ info_box = uicontrol(panel, 'Style', 'text', ...
 
 sim_data = struct('p', p, 'p_x', p_x, 'p_y', p_y, 't', t, 'N', N, ...
     't_step', t_step, 'ax1', ax1, 'ax2', ax2, 'ax3', ax3, ...
-    'edit_x', edit_x, 'edit_y', edit_y, 'info_box', info_box, ...
-    'def_x_mm', init_x_mm, 'def_y_mm', init_y_mm);
+    'edit_x', edit_x, 'edit_y', edit_y, ...
+    'edit_kpx', edit_kpx, 'edit_kix', edit_kix, 'edit_kdx', edit_kdx, 'edit_nx', edit_nx, ...
+    'edit_kpy', edit_kpy, 'edit_kiy', edit_kiy, 'edit_kdy', edit_kdy, 'edit_ny', edit_ny, ...
+    'def_pid_x', def_pid_x, 'def_pid_y', def_pid_y, ...
+    'info_box', info_box, 'def_x_mm', init_x_mm, 'def_y_mm', init_y_mm);
 
+all_edits = [edit_x, edit_y, edit_kpx, edit_kix, edit_kdx, edit_nx, ...
+             edit_kpy, edit_kiy, edit_kdy, edit_ny];
 btn_run.Callback = @(~, ~) update_simulation(sim_data);
-edit_x.Callback  = @(~, ~) update_simulation(sim_data);
-edit_y.Callback  = @(~, ~) update_simulation(sim_data);
+for h = all_edits
+    h.Callback = @(~, ~) update_simulation(sim_data);
+end
 
 update_simulation(sim_data);
 
 % fungsi callback & simulasi ---
 function update_simulation(d)
-    val_x_mm = str2double(strtrim(d.edit_x.String));
-    val_y_mm = str2double(strtrim(d.edit_y.String));
+    val_x_mm = parse_edit_or_default(d.edit_x, d.def_x_mm);
+    val_y_mm = parse_edit_or_default(d.edit_y, d.def_y_mm);
 
-    if isnan(val_x_mm)
-        val_x_mm = d.def_x_mm;
-        d.edit_x.String = num2str(val_x_mm);
-    end
-    if isnan(val_y_mm)
-        val_y_mm = d.def_y_mm;
-        d.edit_y.String = num2str(val_y_mm);
-    end
+    pid_x = d.def_pid_x;
+    pid_x.Kp = parse_edit_or_default(d.edit_kpx, d.def_pid_x.Kp);
+    pid_x.Ki = parse_edit_or_default(d.edit_kix, d.def_pid_x.Ki);
+    pid_x.Kd = parse_edit_or_default(d.edit_kdx, d.def_pid_x.Kd);
+    pid_x.N  = parse_edit_or_default(d.edit_nx,  d.def_pid_x.N);
+
+    pid_y = d.def_pid_y;
+    pid_y.Kp = parse_edit_or_default(d.edit_kpy, d.def_pid_y.Kp);
+    pid_y.Ki = parse_edit_or_default(d.edit_kiy, d.def_pid_y.Ki);
+    pid_y.Kd = parse_edit_or_default(d.edit_kdy, d.def_pid_y.Kd);
+    pid_y.N  = parse_edit_or_default(d.edit_ny,  d.def_pid_y.N);
 
     x_ref = val_x_mm / 1000;
     y_ref = val_y_mm / 1000;
@@ -116,10 +157,10 @@ function update_simulation(d)
     x_ref_vec(idx_step) = x_ref;
     y_ref_vec(idx_step) = y_ref;
 
-    [x_rk4, y_rk4, vx_rk4, vy_rk4, ~, ~] = run_2d_loop( ...
-        d.p, d.p_x, d.p_y, d.t, x_ref_vec, y_ref_vec, 'rk4');
+    [x_rk4, y_rk4, vx_rk4, vy_rk4, ux_rk4, uy_rk4] = run_2d_loop( ...
+        d.p_x, d.p_y, pid_x, pid_y, d.t, x_ref_vec, y_ref_vec, 'rk4');
     [x_eu, y_eu, ~, ~, ~, ~] = run_2d_loop( ...
-        d.p, d.p_x, d.p_y, d.t, x_ref_vec, y_ref_vec, 'euler');
+        d.p_x, d.p_y, pid_x, pid_y, d.t, x_ref_vec, y_ref_vec, 'euler');
 
     err_x_mm = (x_ref - x_rk4(end)) * 1000;
     err_y_mm = (y_ref - y_rk4(end)) * 1000;
@@ -164,27 +205,32 @@ function update_simulation(d)
     info_lines = {
         sprintf('t_step  : %.3f s', d.t_step)
         sprintf('Err RK4 : (%.2f, %.2f) mm', err_x_mm, err_y_mm)
+        sprintf('Max |u| : (%.1f, %.1f) V', max(abs(ux_rk4)), max(abs(uy_rk4)))
         ''
-        '--- PID POS X ---'
-        sprintf('Kp_x : %.3g', d.p.pid_pos.x.Kp)
-        sprintf('Ki_x : %.3g', d.p.pid_pos.x.Ki)
-        sprintf('Kd_x : %.3g', d.p.pid_pos.x.Kd)
-        sprintf('N_x  : %.3g', d.p.pid_pos.x.N)
+        sprintf('--- PID X (def: %.3g/%.3g/%.3g) ---', ...
+            d.def_pid_x.Kp, d.def_pid_x.Ki, d.def_pid_x.Kd)
+        sprintf('Kp=%.3g Ki=%.3g Kd=%.3g N=%.3g', pid_x.Kp, pid_x.Ki, pid_x.Kd, pid_x.N)
         ''
-        '--- PID POS Y ---'
-        sprintf('Kp_y : %.3g', d.p.pid_pos.y.Kp)
-        sprintf('Ki_y : %.3g', d.p.pid_pos.y.Ki)
-        sprintf('Kd_y : %.3g', d.p.pid_pos.y.Kd)
-        sprintf('N_y  : %.3g', d.p.pid_pos.y.N)
+        sprintf('--- PID Y (def: %.3g/%.3g/%.3g) ---', ...
+            d.def_pid_y.Kp, d.def_pid_y.Ki, d.def_pid_y.Kd)
+        sprintf('Kp=%.3g Ki=%.3g Kd=%.3g N=%.3g', pid_y.Kp, pid_y.Ki, pid_y.Kd, pid_y.N)
         ''
-        sprintf('m_x=%.3f m_y=%.3f', d.p.m_x, d.p.m_y)
-        sprintf('dt=%.4g t_end=%.2g', d.p.dt, d.p.t_end)
+        sprintf('m_x=%.3f m_y=%.3f', d.p_x.m, d.p_y.m)
+        sprintf('dt=%.4g t_end=%.2g', d.p_x.dt, d.p_x.t_end)
     };
     d.info_box.String = info_lines;
 end
 
+function val = parse_edit_or_default(ctrl, def_val)
+    val = str2double(strtrim(ctrl.String));
+    if isnan(val) || ~isfinite(val)
+        val = def_val;
+        ctrl.String = num2str(val);
+    end
+end
+
 function [x_hist, y_hist, vx_hist, vy_hist, ux_hist, uy_hist] = run_2d_loop( ...
-        p, p_x, p_y, t, x_ref_vec, y_ref_vec, method)
+        p_x, p_y, pid_x, pid_y, t, x_ref_vec, y_ref_vec, method)
     N = numel(t);
 
     state_x = [0.0; 0.0; 0.0];
@@ -219,9 +265,9 @@ function [x_hist, y_hist, vx_hist, vy_hist, ux_hist, uy_hist] = run_2d_loop( ...
         err_y = y_ref_vec(k) - pos_y;
 
         [ux, pid_state_x] = pid_controller( ...
-            err_x, p_x.dt, p.pid_pos.x, pid_state_x, p_x.u_min, p_x.u_max);
+            err_x, p_x.dt, pid_x, pid_state_x, p_x.u_min, p_x.u_max);
         [uy, pid_state_y] = pid_controller( ...
-            err_y, p_y.dt, p.pid_pos.y, pid_state_y, p_y.u_min, p_y.u_max);
+            err_y, p_y.dt, pid_y, pid_state_y, p_y.u_min, p_y.u_max);
 
         ux_hist(k) = ux;
         uy_hist(k) = uy;
